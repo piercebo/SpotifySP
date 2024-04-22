@@ -27,4 +27,5 @@ def vectorizeSongs():
     df = df.drop(["danceability", "energy", "key", "loudness", "mode", "speechiness", "acousticness", "instrumentalness", "liveness", "valence", "tempo", "duration_ms", "language"], axis=1)
     df['sentence_vector'] = df["text"].apply(buildSentenceVector)
     df.to_csv("./datasets/VectoredSongs.csv", index=False)
-    
+
+print(buildSentenceVector("hello world"))
