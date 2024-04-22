@@ -1,0 +1,5 @@
+
+*.npy
+models/gloveModel300.model
+models/gloveModel200.model
+models/gloveModel100.model

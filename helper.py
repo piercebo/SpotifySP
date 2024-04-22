@@ -1,5 +1,12 @@
+import gensim.downloader
+import gensim.scripts
+import gensim.scripts.glove2word2vec
+import gensim.test
+import gensim.test.utils
 import pandas as pd
+import gensim
 import re
+import os
 
 def LyricToCSVFilter(lyricSet):
     df2 = pd.read_csv(lyricSet)
@@ -14,9 +21,6 @@ def LyricToCSVFilter(lyricSet):
     df2 = df2[df2['language'] == 'en']
     df2.to_csv("./datasets/LyricsAndAPI2.csv", index=False)
     
-
-
-
 def dolchFilter(csvFile):
     df = pd.read_csv(csvFile)
     regexList = [r'\bthe\b', r'\bis\b', r'\bbe\b', r'\bto\b', r'\bof\b', r'\band\b', r'\ba\b', r'\bin\b', r'\bthat\b', r'\bhave\b', r'\bit\b', r'\bfor\b', r'\bon\b', r'\bwith\b', r'\bas\b', r'\bdo\b', r'\bat\b', r'\bthis\b',
@@ -32,4 +36,38 @@ def dolchFilter(csvFile):
         df.loc[i, "text"] = re.sub(whitespaces, " ", df['text'][i])
     df.to_csv("./datasets/FilteredLyrics1.csv", index=False)
 
-dolchFilter("./datasets/LyricsAndAPI2.csv")
+#corpus is list of strings or, more specifically, sentences
+def gensimTrain(corpus: list):
+    model = gensim.models.word2vec.Word2Vec.load("./model1.model")
+    data = {"text": corpus}
+    df = pd.DataFrame(data)
+    print(df.shape)
+    splitText = df["text"].apply(gensim.utils.simple_preprocess)
+    model.build_vocab(splitText, progress_per=10000, update=True)
+    model.train(splitText, total_examples=model.corpus_count, epochs=model.epochs)
+    model.save("./model1.model")
+
+def gensimGloveInit():
+    # glove model 100: "glove-wiki-gigaword-100"
+    # glove model 200: ".glove-wiki-gigaword-200"
+    # glove model 300: "glove-wiki-gigaword-300" <- Recommended
+
+    model = gensim.downloader.load('glove-wiki-gigaword-300')
+    model.save("./models/gloveModel300.model")
+
+def customStandfordTest(string):
+    model = gensim.models.word2vec.Word2Vec.load("models/customStandford.model")
+    print('\n', model.wv.most_similar(string), '\n')
+    print(model.wv.similarity(w1=string, w2="hello"), '\n')
+
+def gloveModelTest(string):
+    # glove model 100: "./models/gloveModel100.model"
+    # glove model 200: "./models/gloveModel200.model"
+    # glove model 300: "./models/gloveModel300.model" <- Recommended
+
+    model = gensim.models.keyedvectors.KeyedVectors.load("./models/gloveModel300.model")
+    print('\n', model.most_similar(string), '\n')
+    print(model.similarity(w1=string, w2="hello"), '\n')
+
+gensimGloveInit()
+gloveModelTest("hello")
