@@ -6,7 +6,6 @@ import gensim.test.utils
 import pandas as pd
 import gensim
 import re
-import os
 
 def LyricToCSVFilter(lyricSet):
     df2 = pd.read_csv(lyricSet)
@@ -68,6 +67,3 @@ def gloveModelTest(string):
     model = gensim.models.keyedvectors.KeyedVectors.load("./models/gloveModel300.model")
     print('\n', model.most_similar(string), '\n')
     print(model.similarity(w1=string, w2="hello"), '\n')
-
-gensimGloveInit()
-gloveModelTest("hello")
