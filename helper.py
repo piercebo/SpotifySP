@@ -6,6 +6,7 @@ import gensim.test.utils
 import pandas as pd
 import gensim
 import re
+import numpy as np
 
 def LyricToCSVFilter(lyricSet):
     df2 = pd.read_csv(lyricSet)
@@ -59,6 +60,12 @@ def customStandfordTest(string):
     print('\n', model.wv.most_similar(string), '\n')
     print(model.wv.similarity(w1=string, w2="hello"), '\n')
 
+def genreCollection():
+    df = pd.read_csv("./datasets/LyricSet2.csv")
+    genre = df["playlist_genre"].unique().tolist()
+    subGenre = df["playlist_subgenre"].unique().tolist()
+    return (genre, subGenre)
+
 def gloveModelTest(string):
     # glove model 100: "./models/gloveModel100.model"
     # glove model 200: "./models/gloveModel200.model"
@@ -67,4 +74,3 @@ def gloveModelTest(string):
     model = gensim.models.keyedvectors.KeyedVectors.load("./models/gloveModel300.model")
     print('\n', model.most_similar(string), '\n')
     print(model.similarity(w1=string, w2="hello"), '\n')
-

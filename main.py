@@ -39,19 +39,71 @@ def wordLookup(string):
     except KeyError:
         print("word [" + string + "] not found")
 
+def checkInputGenre(inputString):
+    genreSimilarity = 0
+    subGenreSimilarity = 0
+    inputGenre = ""
+    inputSubGenre = ""
+    inputLowerCase = inputString.lower()
+    genre, subGenre = helper.genreCollection()
+    for value in genre:
+        if value in inputLowerCase:
+            inputGenre = value
+            genreSimilarity += 0.1
+        if ("non " + value) in inputLowerCase:
+            genreSimilarity -= 0.2
+        elif ("non-" + value) in inputLowerCase:
+            genreSimilarity -= 0.2
+        elif ("not " + value) in inputLowerCase:
+            genreSimilarity -= 0.2
+    for value in subGenre:
+        if value in inputLowerCase:
+            inputSubGenre = value
+            subGenreSimilarity += 0.2
+        if ("non " + value) in inputLowerCase:
+            subGenreSimilarity -= 0.4
+        elif ("non-" + value) in inputLowerCase:
+            subGenreSimilarity -= 0.4
+        elif ("not " + value) in inputLowerCase:
+            subGenreSimilarity -= 0.4
+    return (inputGenre, genreSimilarity, inputSubGenre, subGenreSimilarity)
+        
+
+def inputGenreSimilarity(df, track_id, genre, genreSimilarity, subGenre, subGenreSimilarity):
+    if genre == "" and subGenre == "":
+        return 0
+    currentRow = df.loc[df["track_id"] == track_id]
+    rowGenre = currentRow["playlist_genre"].values[0]
+    rowSubGenre = currentRow["playlist_subgenre"].values[0]
+    similarity = 0
+    if genre == rowGenre:
+        similarity += genreSimilarity
+    if rowSubGenre == subGenreSimilarity:
+        similarity += subGenreSimilarity
+    return similarity
+
+    
+
 def cosineSimilarity(vector1, vector2):
     return torch.nn.functional.cosine_similarity(vector1, vector2, dim=-1)
 
-def curatePlaylist(inputVector):
+def curatePlaylist(inputVector, inputString):
     df = pd.read_csv("./datasets/VectoredSongs.csv")
+    df2 = pd.read_csv("./datasets/LyricSet2.csv")
     similarityList = []
+    # check for genres in input
+    inputGenreTuple = checkInputGenre(inputString)
     for i in range(len(df["sentence_vector"])):
         songTensorStr = df.loc[i, "sentence_vector"]
         removedTensorOperator = songTensorStr.split('[')[1].split(']')[0]
         songTensorList = [float(weight) for weight in removedTensorOperator.split(',')]
         songTensor = torch.tensor(songTensorList)
-        similarity = cosineSimilarity(songTensor, inputVector)
-        idSimilarityTuple = (similarity.item(), df["track_id"][i], df["track_name"][i], df["artists"][i])
+        ############################################
+        cosSimilarity = cosineSimilarity(songTensor, inputVector).item()
+        genreSimilarity = inputGenreSimilarity(df2, df["track_id"][i], inputGenreTuple[0], inputGenreTuple[1], inputGenreTuple[2], inputGenreTuple[3])
+        totalSimilarity = cosSimilarity+genreSimilarity
+        ############################################
+        idSimilarityTuple = (totalSimilarity, df["track_id"][i], df["track_name"][i], df["artists"][i])
         similarityList.append(idSimilarityTuple)
     similarityList = sorted(similarityList, key=lambda tup: tup[0], reverse=True)
     return similarityList[:11]
@@ -61,7 +113,7 @@ def main():
     inputVector = buildSentenceVector(inputString)
     if len(inputVector) == 0:
         print("\nInvalid entry. Recheck spelling.\n")
-    playlist = curatePlaylist(inputVector)
+    playlist = curatePlaylist(inputVector, inputString)
     print("\n", playlist, "\n")
     
 main()
