@@ -2,6 +2,8 @@ import helper
 import gensim
 import torch
 import pandas as pd
+import time
+
 
 def buildSentenceVector(string):
     model = gensim.models.keyedvectors.KeyedVectors.load("./models/gloveModel300.model")
@@ -28,4 +30,39 @@ def vectorizeSongs():
     df['sentence_vector'] = df["text"].apply(buildSentenceVector)
     df.to_csv("./datasets/VectoredSongs.csv", index=False)
 
-print(buildSentenceVector("hello world"))
+def wordLookup(string):
+    model = gensim.models.keyedvectors.KeyedVectors.load("./models/gloveModel300.model")
+    lowercase = string.lower()
+    try:
+        vector = model.get_vector(lowercase, norm=False)
+        print("[" + string +"]" + " found")
+        return vector
+    except KeyError:
+        print("word [" + string + "] not found")
+
+def cosineSimilarity(vector1, vector2):
+    return torch.nn.functional.cosine_similarity(vector1, vector2, dim=-1)
+
+def curatePlaylist(inputVector):
+    df = pd.read_csv("./datasets/VectoredSongs.csv")
+    similarityList = []
+    for i in range(len(df["sentence_vector"])):
+        songTensorStr = df.loc[i, "sentence_vector"]
+        removedTensorOperator = songTensorStr.split('[')[1].split(']')[0]
+        songTensorList = [float(weight) for weight in removedTensorOperator.split(',')]
+        songTensor = torch.tensor(songTensorList)
+        similarity = cosineSimilarity(songTensor, inputVector)
+        idSimilarityTuple = (similarity.item(), df["track_id"][i], df["track_name"][i], df["artists"][i])
+        similarityList.append(idSimilarityTuple)
+    similarityList = sorted(similarityList, key=lambda tup: tup[0], reverse=True)
+    return similarityList[:11]
+
+def main():
+    inputString = input("\nEnter playlist description:\n")
+    inputVector = buildSentenceVector(inputString)
+    if len(inputVector) == 0:
+        print("\nInvalid entry. Recheck spelling.\n")
+    playlist = curatePlaylist(inputVector)
+    print("\n", playlist)
+    
+main()
