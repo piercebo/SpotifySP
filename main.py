@@ -62,6 +62,6 @@ def main():
     if len(inputVector) == 0:
         print("\nInvalid entry. Recheck spelling.\n")
     playlist = curatePlaylist(inputVector)
-    print("\n", playlist)
+    print("\n", playlist, "\n")
     
 main()

@@ -67,3 +67,4 @@ def gloveModelTest(string):
     model = gensim.models.keyedvectors.KeyedVectors.load("./models/gloveModel300.model")
     print('\n', model.most_similar(string), '\n')
     print(model.similarity(w1=string, w2="hello"), '\n')
+
