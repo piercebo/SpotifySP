@@ -1,5 +1,11 @@
 # SpotifySP
- 
+
+Requires the following libraries: <br />
+PyTorch - ``` pip3 install torch torchvision torchaudio ``` (CPU version) <br />
+Pandas - ``` pip install pandas ``` <br />
+Gensim - ``` pip install --upgrade gensim ``` <br />
+
+
 Outside Datasets: <br />
 Spotify API slice - https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset?resource=download <br />
 Lyric dataset 1 - https://www.kaggle.com/datasets/notshrirang/spotify-million-song-dataset <br />
@@ -16,3 +22,5 @@ Running the helper.py file will currently create the word vector model using the
 main.buildSentenceVector() takes the average of all the word vectors inside a sentence.  That means we have a vector representation of the general meaning of a sentence.  In datasets/VectoredSongs.csv, all the songs have a generalized sentence embedding using this method.  Not every word in every song has a word embedding in the GloVe model.  These are words that aren't actual words ('gankin', 'bankin', 'heeeeeeeeeeeyyyyyyyy'), most expletive words, and non-english words (알아줬으면), despite all the songs in the datasets/FilteredLyrics1.csv being categorized as english.
 
 main.vectorizeSongs() is the function that created the datasets/VectoredSongs.csv. I forgot to set my tensor device as my GPU and don't know if the PyTorch library automatically chooses to use the CPU or GPU given the kind of PyTorch that you have installed.  If you have your tensor device set to an Nvidia GPU with CUDA drivers this function might run faster than what it did for me.  Runnning this function takes approximately an hour.
+
+Running main.py will execute the main.curatePlaylist() function which will analyze the given prompt and compare its sentence vector with the vectors of our songs.  The main function will print a 10 song playlist that best matches the given prompt.  The gloveModel300 Gensim neural network must be in your models directory for this current version to run. Calling gensimGloveInit() in the helper.py file will create it for you.

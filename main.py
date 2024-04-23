@@ -2,7 +2,6 @@ import helper
 import gensim
 import torch
 import pandas as pd
-import time
 
 
 def buildSentenceVector(string):
