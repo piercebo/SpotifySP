@@ -105,7 +105,16 @@ def curatePlaylist(inputVector, inputString):
         ############################################
         idSimilarityTuple = (totalSimilarity, df["track_id"][i], df["track_name"][i], df["artists"][i])
         similarityList.append(idSimilarityTuple)
-    similarityList = sorted(similarityList, key=lambda tup: tup[0], reverse=True)
+    uniquetup = set(tuple())
+    slist = []
+    for i in similarityList:
+        newtup = tuple((i[0],i[2],i[3]))
+        if newtup not in uniquetup:
+            tup = (i[0],i[2],i[3])
+            slist.append(tup)
+            uniquetup.add(newtup)
+    similarityList = sorted(slist, key=lambda tup: tup[0], reverse=True)
+    print(similarityList[8][2] == similarityList[7][2])
     return similarityList[:11]
 
 def main():
