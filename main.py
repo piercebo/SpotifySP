@@ -37,73 +37,20 @@ def wordLookup(string):
         print("[" + string +"]" + " found")
         return vector
     except KeyError:
-        print("word [" + string + "] not found")
-
-def checkInputGenre(inputString):
-    genreSimilarity = 0
-    subGenreSimilarity = 0
-    inputGenre = ""
-    inputSubGenre = ""
-    inputLowerCase = inputString.lower()
-    genre, subGenre = helper.genreCollection()
-    for value in genre:
-        if value in inputLowerCase:
-            inputGenre = value
-            genreSimilarity += 0.1
-        if ("non " + value) in inputLowerCase:
-            genreSimilarity -= 0.2
-        elif ("non-" + value) in inputLowerCase:
-            genreSimilarity -= 0.2
-        elif ("not " + value) in inputLowerCase:
-            genreSimilarity -= 0.2
-    for value in subGenre:
-        if value in inputLowerCase:
-            inputSubGenre = value
-            subGenreSimilarity += 0.2
-        if ("non " + value) in inputLowerCase:
-            subGenreSimilarity -= 0.4
-        elif ("non-" + value) in inputLowerCase:
-            subGenreSimilarity -= 0.4
-        elif ("not " + value) in inputLowerCase:
-            subGenreSimilarity -= 0.4
-    return (inputGenre, genreSimilarity, inputSubGenre, subGenreSimilarity)
-        
-
-def inputGenreSimilarity(df, track_id, genre, genreSimilarity, subGenre, subGenreSimilarity):
-    if genre == "" and subGenre == "":
-        return 0
-    currentRow = df.loc[df["track_id"] == track_id]
-    rowGenre = currentRow["playlist_genre"].values[0]
-    rowSubGenre = currentRow["playlist_subgenre"].values[0]
-    similarity = 0
-    if genre == rowGenre:
-        similarity += genreSimilarity
-    if rowSubGenre == subGenreSimilarity:
-        similarity += subGenreSimilarity
-    return similarity
-
-    
+        print("word [" + string + "] not found")  
 
 def cosineSimilarity(vector1, vector2):
     return torch.nn.functional.cosine_similarity(vector1, vector2, dim=-1)
 
-def curatePlaylist(inputVector, inputString):
-    df = pd.read_csv("./datasets/VectoredSongs.csv")
-    df2 = pd.read_csv("./datasets/LyricSet2.csv")
-    similarityList = []
-    # check for genres in input
-    inputGenreTuple = checkInputGenre(inputString)
+def curatePlaylist(inputVector, df):
+    similarityList = []    
     for i in range(len(df["sentence_vector"])):
         songTensorStr = df.loc[i, "sentence_vector"]
         removedTensorOperator = songTensorStr.split('[')[1].split(']')[0]
         songTensorList = [float(weight) for weight in removedTensorOperator.split(',')]
         songTensor = torch.tensor(songTensorList)
-        ############################################
         cosSimilarity = cosineSimilarity(songTensor, inputVector).item()
-        genreSimilarity = inputGenreSimilarity(df2, df["track_id"][i], inputGenreTuple[0], inputGenreTuple[1], inputGenreTuple[2], inputGenreTuple[3])
-        totalSimilarity = cosSimilarity+genreSimilarity
-        ############################################
-        idSimilarityTuple = (totalSimilarity, df["track_id"][i], df["track_name"][i], df["artists"][i])
+        idSimilarityTuple = (cosSimilarity, df["track_id"][i], df["track_name"][i], df["artists"][i])
         similarityList.append(idSimilarityTuple)
     uniquetup = set(tuple())
     slist = []
@@ -114,15 +61,27 @@ def curatePlaylist(inputVector, inputString):
             slist.append(tup)
             uniquetup.add(newtup)
     similarityList = sorted(slist, key=lambda tup: tup[0], reverse=True)
-    print(similarityList[8][2] == similarityList[7][2])
     return similarityList[:11]
 
 def main():
+    df = pd.read_csv("./datasets/VectoredSongs.csv")
     inputString = input("\nEnter playlist description:\n")
+    genres = ['rock', 'r&b', 'pop', 'edm', 'latin', 'rap']
+    subGenres = ['classic rock', 'hard rock', 'new jack swing', 'neo soul', 'dance pop', 'urban contemporary', 'big room', 'hip pop', 'latin pop', 'indie poptimism', 'gangster rap', 'album rock', 'post-teen pop', 'trap', 'latin hip hop', 'southern hip hop', 'tropical', 'electropop', 'progressive electro house', 'pop edm', 'reggaeton', 'hip hop', 'permanent wave', 'electro house']
+    print('\n', genres)
+    genreInput = input("Enter playlist genre (press enter to skip, type \'subgenres\' for subgenres):\n")
+    if genreInput in genres:
+        df = df[df["playlist_genre"] == genreInput].reset_index(drop=True)
+    elif genreInput == "subgenres":
+        print('\n', subGenres)
+        subGenreInput = input("Enter playlist subgenre (press enter to skip):\n")
+        if subGenreInput in subGenres:
+            df = df[df["playlist_subgenre"] == subGenreInput].reset_index(drop=True)
     inputVector = buildSentenceVector(inputString)
     if len(inputVector) == 0:
         print("\nInvalid entry. Recheck spelling.\n")
-    playlist = curatePlaylist(inputVector, inputString)
+    print('\nMaking Playlist:')
+    playlist = curatePlaylist(inputVector, df)
     print("\n", playlist, "\n")
     
 main()

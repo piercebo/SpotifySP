@@ -74,3 +74,17 @@ def gloveModelTest(string):
     model = gensim.models.keyedvectors.KeyedVectors.load("./models/gloveModel300.model")
     print('\n', model.most_similar(string), '\n')
     print(model.similarity(w1=string, w2="hello"), '\n')
+
+def insertGenres():
+    df1 = pd.read_csv("./datasets/VectoredSongs.csv")
+    df2 = pd.read_csv("./datasets/LyricSet2.csv")
+    df1["playlist_genre"] = ''
+    df1["playlist_subgenre"] = ''
+    for index, row in df1.iterrows():
+        id1 = row["track_id"]
+        df2Row = df2.loc[df2["track_id"] == id1]
+        df2Genre = df2Row["playlist_genre"]
+        df2SubGenre = df2Row["playlist_subgenre"]
+        df1.at[index, "playlist_genre"] = df2Genre.values[0]
+        df1.at[index, "playlist_subgenre"] = df2SubGenre.values[0]
+    df1.to_csv("./datasets/VectoredSongs2.csv", index=False)
