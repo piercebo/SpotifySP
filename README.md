@@ -11,6 +11,8 @@ Spotify API slice - https://www.kaggle.com/datasets/maharshipandya/-spotify-trac
 Lyric dataset 1 - https://www.kaggle.com/datasets/notshrirang/spotify-million-song-dataset <br />
 Lyric dataset 2 - https://www.kaggle.com/datasets/imuhammad/audio-features-and-lyrics-of-spotify-songs <br />
 NLP Training set1 - https://www.kaggle.com/datasets/stanfordu/stanford-natural-language-inference-corpus?select=snli_1.0_train.csv <br />
+Brown Corpus - https://www.kaggle.com/datasets/nltkdata/brown-corpus?select=brown.csv <br />
+NegEx Phrases - https://code.google.com/archive/p/negex/downloads <br />
 
 helper.LyricToCSVFilter() combines the spotify api data with the lyric dataset.  It produces a csv in the datasets directory called "LyricsAndAPI.csv".
 If you are using a CSV highlight tool, the CSV may appear to have broken columns and rows due to commas placed within quotes; The pandas dataframe object will compile it correctly.

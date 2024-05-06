@@ -7,6 +7,9 @@ import pandas as pd
 import gensim
 import re
 import numpy as np
+import torch
+import torchvision
+import torch.nn as nn
 
 def LyricToCSVFilter(lyricSet):
     df2 = pd.read_csv(lyricSet)
@@ -36,17 +39,6 @@ def dolchFilter(csvFile):
         df.loc[i, "text"] = re.sub(whitespaces, " ", df['text'][i])
     df.to_csv("./datasets/FilteredLyrics1.csv", index=False)
 
-#corpus is list of strings or, more specifically, sentences
-def gensimTrain(corpus: list):
-    model = gensim.models.word2vec.Word2Vec.load("./model1.model")
-    data = {"text": corpus}
-    df = pd.DataFrame(data)
-    print(df.shape)
-    splitText = df["text"].apply(gensim.utils.simple_preprocess)
-    model.build_vocab(splitText, progress_per=10000, update=True)
-    model.train(splitText, total_examples=model.corpus_count, epochs=model.epochs)
-    model.save("./model1.model")
-
 def gensimGloveInit():
     # glove model 100: "glove-wiki-gigaword-100"
     # glove model 200: ".glove-wiki-gigaword-200"
@@ -54,11 +46,6 @@ def gensimGloveInit():
 
     model = gensim.downloader.load('glove-wiki-gigaword-300')
     model.save("./models/gloveModel300.model")
-
-def customStandfordTest(string):
-    model = gensim.models.word2vec.Word2Vec.load("models/customStandford.model")
-    print('\n', model.wv.most_similar(string), '\n')
-    print(model.wv.similarity(w1=string, w2="hello"), '\n')
 
 def genreCollection():
     df = pd.read_csv("./datasets/LyricSet2.csv")
@@ -76,7 +63,7 @@ def gloveModelTest(string):
     print(model.similarity(w1=string, w2="hello"), '\n')
 
 def insertGenres():
-    df1 = pd.read_csv("./datasets/VectoredSongs.csv")
+    df1 = pd.read_csv("./datasets/VectoredSongs100d.csv")
     df2 = pd.read_csv("./datasets/LyricSet2.csv")
     df1["playlist_genre"] = ''
     df1["playlist_subgenre"] = ''
@@ -87,4 +74,14 @@ def insertGenres():
         df2SubGenre = df2Row["playlist_subgenre"]
         df1.at[index, "playlist_genre"] = df2Genre.values[0]
         df1.at[index, "playlist_subgenre"] = df2SubGenre.values[0]
-    df1.to_csv("./datasets/VectoredSongs2.csv", index=False)
+    df1.to_csv("./datasets/VectoredSongs100d2.csv", index=False)
+
+def preprocessBrown():
+    df = pd.read_csv("./datasets/brown.csv")
+    df = df.drop(["para_id", "filename", "sent_id", "raw_text", "tokenized_pos", "label"], axis=1)
+    df.to_csv("./datasets/BrownProcessed.csv", index=False)
+
+def preprocessNegEx():
+    df = pd.read_csv("./datasets/NegExPhrases.csv")
+    df = df["text"]
+    df.to_csv("./datasets/NegExPhrases.csv", index=False)
