@@ -6,12 +6,12 @@ import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from tensorflow.keras.layers import Dense, Embedding, LSTM, SpatialDropout1D
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.layers import Dense, Embedding, LSTM, SpatialDropout1D # type: ignore
+from tensorflow.keras.models import Sequential # type: ignore
+from tensorflow.keras.preprocessing.text import Tokenizer # type: ignore
+from tensorflow.keras.preprocessing.sequence import pad_sequences # type: ignore
+from tensorflow.keras.utils import to_categorical # type: ignore
+from tensorflow.keras.callbacks import EarlyStopping # type: ignore
 
 def MultiSentInit():
     #tokenize text
@@ -42,7 +42,7 @@ def MultiSentInit():
 
     #build model
     model = Sequential()
-    model.add(Embedding(input_dim=len(tokenizer.word_index), output_dim=embeddingDim, input_length=paddedSequences.shape[1]))
+    model.add(Embedding(input_dim=len(tokenizer.word_index)+1, output_dim=embeddingDim, input_length=paddedSequences.shape[1]))
     model.add(SpatialDropout1D(0.4))
     model.add(LSTM(64, dropout=0.4, recurrent_dropout=0.4))
     model.add(Dense(4, activation="sigmoid"))
@@ -50,7 +50,7 @@ def MultiSentInit():
     
     #train model and save
     history = model.fit(xTrain, yTrain, epochs=epochs, batch_size=batchSize, validation_split=0.2, callbacks=[EarlyStopping(monitor='val_loss', patience=7, min_delta=0.0001)])
-    model.save_weights("./models/MultiSentLSTM")
+    model.save_weights("./models/MultiSentLSTM.weights.h5")
 
     #graph accuracy and loss
     acc = history.history['acc']
@@ -73,3 +73,5 @@ def MultiSentInit():
     plt.legend()
 
     plt.show()
+
+MultiSentInit()
