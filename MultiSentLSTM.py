@@ -57,7 +57,7 @@ def MultiSentInit():
     loss = history.history['loss']
     val_loss = history.history['val_loss']
 
-    epochs = range(0, len(acc) + 1)
+    epochs = range(1, len(acc) + 1)
 
     plt.plot(epochs, acc, color='b', label='Training acc')
     plt.plot(epochs, val_acc, color='g', label='Validation acc')
