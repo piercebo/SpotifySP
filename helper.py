@@ -1,3 +1,4 @@
+import math
 import gensim.downloader
 import gensim.scripts
 import gensim.scripts.glove2word2vec
@@ -106,3 +107,10 @@ def apiAndLyricMerge():
         df2.at[index, "speechiness"] = df1S.values[0]
         df2.at[index, "valence"] = df1V.values[0]
     df2.to_csv("./datasets/apiAndLyric.csv", index=False)
+
+def mergeMillionAnd2019():    
+    df = pd.read_csv("./datasets/MillionAnd2019.csv")
+    df.dropna(subset=['text'], inplace=True)
+    df.to_csv("./datasets/MillionAnd2019.csv", index=False)
+
+mergeMillionAnd2019()

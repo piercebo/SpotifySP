@@ -1,4 +1,3 @@
-TF_ENABLE_ONEDNN_OPTS=0
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -49,29 +48,85 @@ def MultiSentInit():
     model.compile(optimizer="adam", loss="binary_crossentropy", metrics=['accuracy'])
     
     #train model and save
-    history = model.fit(xTrain, yTrain, epochs=epochs, batch_size=batchSize, validation_split=0.2, callbacks=[EarlyStopping(monitor='val_loss', patience=7, min_delta=0.0001)])
-    model.save_weights("./models/MultiSentLSTM.weights.h5")
+    history = model.fit(xTrain, yTrain, epochs=30, batch_size=batchSize, validation_split=0.2, callbacks=[EarlyStopping(monitor='val_loss', patience=7, min_delta=0.0001)])
+    model.save("./models/MultiSentLSTM.keras")
 
     #graph accuracy and loss
-    acc = history.history['acc']
-    val_acc = history.history['val_acc']
+    acc = history.history['accuracy']
+    val_acc = history.history['val_accuracy']
     loss = history.history['loss']
     val_loss = history.history['val_loss']
 
-    epochs = range(1, len(acc) + 1)
+    epochs = range(0, len(acc) + 1)
 
-    plt.plot(epochs, acc, 'bo', label='Training acc')
-    plt.plot(epochs, val_acc, 'b', label='Validation acc')
+    plt.plot(epochs, acc, color='b', label='Training acc')
+    plt.plot(epochs, val_acc, color='g', label='Validation acc')
     plt.title('Training and validation accuracy')
     plt.legend()
 
     plt.figure()
 
-    plt.plot(epochs, loss, 'bo', label='Training loss')
-    plt.plot(epochs, val_loss, 'b', label='Validation loss')
+    plt.plot(epochs, loss, color='c', label='Training loss')
+    plt.plot(epochs, val_loss, color='r', label='Validation loss')
     plt.title('Training and validation loss')
     plt.legend()
 
     plt.show()
 
-MultiSentInit()
+def trainMSLSTM():
+
+    #tokenize text
+    df = pd.read_csv("./datasets/apiAndLyric.csv") #change dataset if needed
+    tokenizer = Tokenizer()
+    tokenizer.fit_on_texts(df["text"])
+    sequences = tokenizer.texts_to_sequences(df["text"])
+    maxLengthSequence = max(len(sequence) for sequence in sequences)
+    paddedSequences = pad_sequences(sequences, maxLengthSequence)
+    numClasses = 4
+
+    #prepare numpy array for categories
+    categoryData = []
+    for index, row in df.iterrows():
+        dance = float(row["danceability"])
+        energy = float(row["energy"])
+        speech = float(row["speechiness"])
+        valence = float(row["valence"])
+        categoryArray = [dance, energy, speech, valence]
+        categoryData.append(categoryArray)
+    categoryData = np.array(categoryData)     
+
+    #split data
+    xTrain, xTest, yTrain, yTest = train_test_split(paddedSequences, categoryData, test_size=0.2, random_state=0)
+    epochs = 10
+    embeddingDim = 300
+    batchSize = 256
+
+    #load model
+    model = tf.keras.models.load_model("./models/MultiSentLSTM.keras")
+
+    history = model.fit(xTrain, yTrain, epochs=10, batch_size=batchSize, validation_split=0.2, callbacks=[EarlyStopping(monitor='val_loss', patience=7, min_delta=0.0001)])
+    model.save("./models/MultiSentLSTM.keras")
+
+    #graph accuracy and loss
+    acc = history.history['accuracy']
+    val_acc = history.history['val_accuracy']
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+
+    epochs = range(1, len(acc) + 1)
+
+    plt.plot(epochs, acc, color='b', label='Training acc')
+    plt.plot(epochs, val_acc, color='g', label='Validation acc')
+    plt.title('Training and validation accuracy')
+    plt.legend()
+
+    plt.figure()
+
+    plt.plot(epochs, loss, color='c', label='Training loss')
+    plt.plot(epochs, val_loss, color='r', label='Validation loss')
+    plt.title('Training and validation loss')
+    plt.legend()
+
+    plt.show()
+
+trainMSLSTM()
