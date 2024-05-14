@@ -40,12 +40,6 @@ class LSTM(nn.Module):
         return output
 
 
-#################################################
-    # Title: tokenize()
-    # Author: ChatGPT
-    # Date: 5/2/24
-    # Availability: https://chat.openai.com/
-#################################################
 def tokenize():
     df = pd.read_csv("./datasets/BrownProcessed.csv")
     tokenizer = torchtext.data.utils.get_tokenizer("basic_english")

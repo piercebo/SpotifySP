@@ -85,3 +85,24 @@ def preprocessNegEx():
     df = pd.read_csv("./datasets/NegExPhrases.csv")
     df = df["text"]
     df.to_csv("./datasets/NegExPhrases.csv", index=False)
+
+def apiAndLyricMerge():
+    df1 = pd.read_csv("./datasets/LyricSet2.csv")
+    df2 = pd.read_csv("./datasets/VectoredSongs100d.csv")
+    df2 = df2.drop(["sentence_vector"], axis=1)
+    df2["danceability"] = ''
+    df2["energy"] = ''
+    df2["speechiness"] = ''
+    df2["valence"] = ''
+    for index, row in df2.iterrows():
+        id2 = row["track_id"]
+        df1Row = df1.loc[df1["track_id"] == id2]
+        df1D = df1Row["danceability"]
+        df1E = df1Row["energy"]
+        df1S = df1Row["speechiness"]
+        df1V = df1Row["valence"]
+        df2.at[index, "danceability"] = df1D.values[0]
+        df2.at[index, "energy"] = df1E.values[0]
+        df2.at[index, "speechiness"] = df1S.values[0]
+        df2.at[index, "valence"] = df1V.values[0]
+    df2.to_csv("./datasets/apiAndLyric.csv", index=False)
