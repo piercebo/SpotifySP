@@ -5,3 +5,4 @@ models/gloveModel200.model
 models/gloveModel100.model
 models/kerasLSTM.keras
 models/MultiSentLSTM.keras
+*.keras

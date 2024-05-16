@@ -1,7 +1,12 @@
-import helper
 import gensim
 import torch
 import pandas as pd
+import tensorflow as tf
+from tensorflow.keras.preprocessing.text import Tokenizer # type: ignore
+from tensorflow.keras.preprocessing.sequence import pad_sequences # type: ignore
+
+MAX_LENGTH_SONG = 3577 #length of the song with the longest string in apiAndLyric.csv
+
 
 
 def buildSentenceVector(string, selectedModel="2"):
@@ -69,7 +74,30 @@ def wordLookup(string):
 def cosineSimilarity(vector1, vector2):
     return torch.nn.functional.cosine_similarity(vector1, vector2, dim=-1)
 
-def curatePlaylist(inputVector, df):
+def MSLSTMPredict(text):
+    model = tf.keras.models.load_model("./models/MultiSentLSTM_0.5.keras")
+    tokenizer = Tokenizer()
+    tokenizer.texts_to_sequences([text])
+    sequences = tokenizer.texts_to_sequences([text])
+    maxLengthSequence = max(len(sequence) for sequence in sequences)
+    paddedSequences = pad_sequences(sequences, MAX_LENGTH_SONG)
+    prediction = model.predict(paddedSequences)
+    print("Music Inference:" + '\n' + "Danceability - " + str(prediction[0][0]) + "\nEnergy - " + str(prediction[0][1]) + "\nSpeechiness - " + str(prediction[0][2]) + "\nValence - " + str(prediction[0][3]) + '\n')
+    return prediction[0]
+
+def musicInferenceSimilarity(df, musicInference, track_id):
+    impact = 10 #the percentage that music inference effects playlist decisions
+    currentSong = df.loc[df['track_id'] == track_id]
+    if currentSong.empty:
+        return 0
+    apiVector = [float(currentSong.iloc[0, 6]), float(currentSong.iloc[0, 7]), float(currentSong.iloc[0, 8]), float(currentSong.iloc[0, 9])]
+    similarity = cosineSimilarity(torch.tensor(musicInference), torch.tensor(apiVector))
+    return similarity.item()/impact
+
+
+
+def curatePlaylist(inputVector, df, musicInference):
+    apiDF = pd.read_csv("./datasets/apiAndLyric.csv")
     similarityList = []    
     for i in range(len(df["sentence_vector"])):
         songTensorStr = df.loc[i, "sentence_vector"]
@@ -77,7 +105,8 @@ def curatePlaylist(inputVector, df):
         songTensorList = [float(weight) for weight in removedTensorOperator.split(',')]
         songTensor = torch.tensor(songTensorList)
         cosSimilarity = cosineSimilarity(songTensor, inputVector).item()
-        idSimilarityTuple = (cosSimilarity, df["track_id"][i], df["track_name"][i], df["artists"][i])
+        inferenceSimilarity = musicInferenceSimilarity(apiDF, musicInference, df.loc[i, "track_id"])
+        idSimilarityTuple = (cosSimilarity + inferenceSimilarity, df["track_id"][i], df["track_name"][i], df["artists"][i])
         similarityList.append(idSimilarityTuple)
     uniquetup = set(tuple())
     slist = []
@@ -107,11 +136,12 @@ def main():
         if subGenreInput in subGenres:
             df = df[df["playlist_subgenre"] == subGenreInput].reset_index(drop=True)
     inputString = input("\nEnter playlist description:\n")
+    musicInference = MSLSTMPredict(inputString)
     inputVector = buildSentenceVector(inputString, selectedModel)
     if len(inputVector) == 0:
         print("\nInvalid entry. Recheck spelling.\n")
     print('\nMaking Playlist:')
-    playlist = curatePlaylist(inputVector, df)
+    playlist = curatePlaylist(inputVector, df, musicInference)
     print("\n", playlist, "\n")
-    
+
 main()

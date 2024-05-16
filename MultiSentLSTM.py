@@ -42,32 +42,41 @@ def MultiSentInit():
     #build model
     model = Sequential()
     model.add(Embedding(input_dim=len(tokenizer.word_index)+1, output_dim=embeddingDim, input_length=paddedSequences.shape[1]))
-    model.add(SpatialDropout1D(0.4))
+    model.add(SpatialDropout1D(0.5))
     model.add(LSTM(64, dropout=0.4, recurrent_dropout=0.4))
     model.add(Dense(4, activation="sigmoid"))
     model.compile(optimizer="adam", loss="binary_crossentropy", metrics=['accuracy'])
     
-    #train model and save
+    #train model
+    totalAcc = []
+    totalValAcc = []
+    totalLoss = []
+    totalValLoss = []
     history = model.fit(xTrain, yTrain, epochs=30, batch_size=batchSize, validation_split=0.2, callbacks=[EarlyStopping(monitor='val_loss', patience=7, min_delta=0.0001)])
-    model.save("./models/MultiSentLSTM.keras")
+    totalAcc = totalAcc + history.history['accuracy']
+    totalValAcc = totalValAcc + history.history['val_accuracy']
+    totalLoss = totalLoss + history.history['loss']
+    totalValLoss = totalValLoss + history.history['val_loss']
+
+    #save model
+    model.save("./models/MultiSentLSTM_0.5.1.keras")
 
     #graph accuracy and loss
-    acc = history.history['accuracy']
-    val_acc = history.history['val_accuracy']
-    loss = history.history['loss']
-    val_loss = history.history['val_loss']
+    epochs = range(1, len(totalAcc) + 1)
 
-    epochs = range(1, len(acc) + 1)
-
-    plt.plot(epochs, acc, color='b', label='Training acc')
-    plt.plot(epochs, val_acc, color='g', label='Validation acc')
+    plt.plot(epochs, totalAcc, color='b', label='Training acc')
+    plt.plot(epochs, totalValAcc, color='g', label='Validation acc')
+    plt.ylim(0,1)
+    plt.xlabel("Epochs")
     plt.title('Training and validation accuracy')
     plt.legend()
 
     plt.figure()
 
-    plt.plot(epochs, loss, color='c', label='Training loss')
-    plt.plot(epochs, val_loss, color='r', label='Validation loss')
+    plt.plot(epochs, totalLoss, color='c', label='Training loss')
+    plt.plot(epochs, totalValLoss, color='r', label='Validation loss')
+    plt.ylim(0,1)
+    plt.xlabel("Epochs")
     plt.title('Training and validation loss')
     plt.legend()
 
@@ -81,6 +90,7 @@ def trainMSLSTM():
     tokenizer.fit_on_texts(df["text"])
     sequences = tokenizer.texts_to_sequences(df["text"])
     maxLengthSequence = max(len(sequence) for sequence in sequences)
+    print("\n", maxLengthSequence, '\n')
     paddedSequences = pad_sequences(sequences, maxLengthSequence)
     numClasses = 4
 
@@ -96,16 +106,16 @@ def trainMSLSTM():
     categoryData = np.array(categoryData)     
 
     #split data
-    xTrain, xTest, yTrain, yTest = train_test_split(paddedSequences, categoryData, test_size=0.2, random_state=0)
+    xTrain, xTest, yTrain, yTest = train_test_split(paddedSequences, categoryData, test_size=0.2, random_state=2)
     epochs = 10
     embeddingDim = 300
     batchSize = 256
 
     #load model
-    model = tf.keras.models.load_model("./models/MultiSentLSTM.keras")
+    model = tf.keras.models.load_model("./models/MultiSentLSTM_0.5.keras")
 
     history = model.fit(xTrain, yTrain, epochs=10, batch_size=batchSize, validation_split=0.2, callbacks=[EarlyStopping(monitor='val_loss', patience=7, min_delta=0.0001)])
-    model.save("./models/MultiSentLSTM.keras")
+    model.save("./models/MultiSentLSTM_0.5.2.keras")
 
     #graph accuracy and loss
     acc = history.history['accuracy']
@@ -117,6 +127,8 @@ def trainMSLSTM():
 
     plt.plot(epochs, acc, color='b', label='Training acc')
     plt.plot(epochs, val_acc, color='g', label='Validation acc')
+    plt.ylim(0,1)
+    plt.xlabel("Epochs")
     plt.title('Training and validation accuracy')
     plt.legend()
 
@@ -124,6 +136,8 @@ def trainMSLSTM():
 
     plt.plot(epochs, loss, color='c', label='Training loss')
     plt.plot(epochs, val_loss, color='r', label='Validation loss')
+    plt.ylim(0,1)
+    plt.xlabel("epochs")
     plt.title('Training and validation loss')
     plt.legend()
 
