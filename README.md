@@ -4,6 +4,7 @@ Requires the following libraries: <br />
 PyTorch - ``` pip3 install torch torchvision torchaudio ``` (CPU version) <br />
 Pandas - ``` pip install pandas ``` <br />
 Gensim - ``` pip install --upgrade gensim ``` <br />
+TensorFlow - ``` pip install --upgrade pip ``` <br />
 
 
 Outside Datasets: <br />
