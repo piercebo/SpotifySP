@@ -1,5 +1,7 @@
 # SpotifySP
 
+Combines multiple datasets to build a customized Multi-Class Sentiment Classification model and a large-scale Natural Language Processing model.  Using these models, a user can make a text-based request for a specific playlist they'd like to build.  The two models perform a semantic analysis of the request and return a Spotify playlist that can be made via Spotify's API.
+
 Requires the following libraries: <br />
 PyTorch - ``` pip3 install torch torchvision torchaudio ``` (CPU version) <br />
 Pandas - ``` pip install pandas ``` <br />
